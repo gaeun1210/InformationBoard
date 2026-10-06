@@ -1,0 +1,19 @@
+{
+  "latitude": 35.85,
+  "longitude": 128.625,
+  "generationtime_ms": 0.032067298889160156,
+  "utc_offset_seconds": 32400,
+  "timezone": "Asia/Seoul",
+  "timezone_abbreviation": "GMT+9",
+  "elevation": 49,
+  "current_units": {
+    "time": "iso8601",
+    "interval": "seconds",
+    "temperature_2m": "°C"
+  },
+  "current": {
+    "time": "2026-10-06T19:45",
+    "interval": 900,
+    "temperature_2m": 15.8
+  }
+}
