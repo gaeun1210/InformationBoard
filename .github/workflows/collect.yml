@@ -1,0 +1,31 @@
+name: 오늘 값 수집
+
+# 자동 예약(cron)을 쓰지 않습니다.
+# 과제는 서로 다른 KST 날짜의 실제 기록 "정확히 2건"을 요구하므로
+# 첫날 한 번, 다른 날 한 번만 직접 실행합니다.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write   # 저장소에 data/ 를 커밋하기 위한 기본 GITHUB_TOKEN 권한. 별도 비밀값 없음.
+
+concurrency: collect
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 실제 조회
+        run: node scripts/collect.mjs
+      - name: 기록 커밋
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet && echo "변경 없음" && exit 0
+          git commit -m "data: $(TZ=Asia/Seoul date +%F) 수집"
+          git push
