@@ -1,0 +1,13 @@
+{
+  "signal_id": "daegu-dongseongro-temperature-2m",
+  "timezone": "Asia/Seoul",
+  "records": [],
+  "last_good": null,
+  "status": {
+    "state": "empty",
+    "error_code": "none",
+    "checked_at": null,
+    "http_status": null,
+    "detail": ""
+  }
+}

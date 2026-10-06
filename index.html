@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ko" data-period="day">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>동성로 기온 기록판</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="backdrop" aria-hidden="true">
+  <div class="bg bg-day"></div>
+  <div class="bg bg-night"></div>
+  <div class="veil"></div>
+</div>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="brand-row">
+        <svg class="pin" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+        <div><h1>DONGSEONGRO</h1><small>TEMPERATURE OBSERVATORY</small></div>
+      </div>
+      <p class="hand" id="hand">오늘, 동성로의 기온</p>
+      <p class="tagline">대구 동성로 기온 기록판 · 하루 한 번 기록하고 어제와 비교합니다</p>
+    </div>
+    <div class="chip glass">
+      <span class="chip-place"><svg class="pin sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>대구 중구 동성로</span>
+      <span class="chip-sep"></span>
+      <span id="now" class="chip-now">—</span>
+      <span id="period-icon" class="chip-icon" aria-hidden="true"></span>
+      <button class="music" id="bgm" aria-pressed="false" title="배경음악"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 17.5a3.5 3.5 0 1 1-2-3.16V5l12-2v11.5a3.5 3.5 0 1 1-2-3.16V7.4L9 8.73z"/></svg><span>음악 켜기</span></button>
+      <input type="range" id="bgm-vol" min="0" max="100" step="1" value="50" aria-label="음악 음량" hidden>
+      <div class="seg" role="group" aria-label="배경 시간대">
+        <button data-mode="auto" aria-pressed="true">자동</button>
+        <button data-mode="day" aria-pressed="false">낮</button>
+        <button data-mode="night" aria-pressed="false">밤</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="notice glass" id="file-notice" hidden>
+    <b>파일을 직접 열어서 기록을 읽을 수 없습니다.</b>
+    브라우저는 내 컴퓨터에서 바로 연 페이지가 옆 폴더(data/, fixtures/)를 읽지 못하게 막습니다. 버튼은 동작하지만 실제 기록과 fixture 해시는 배포 주소(https://…github.io/…)에서 열어야 보입니다.
+  </div>
+  <div class="notice glass" id="boot-error" hidden>
+    <b>화면 스크립트를 불러오지 못했습니다.</b> core.js · replay.js · app.js가 index.html과 같은 폴더에 있는지 확인하세요.
+  </div>
+
+  <nav class="tabs glass" role="tablist" aria-label="보기">
+    <button class="tab" role="tab" id="tab-live" aria-controls="panel-live" aria-selected="true">실제 기록</button>
+    <button class="tab" role="tab" id="tab-lab" aria-controls="panel-lab" aria-selected="false" tabindex="-1">장애 재생실</button>
+    <button class="tab" role="tab" id="tab-day" aria-controls="panel-day" aria-selected="false" tabindex="-1">하루 한 줄 시험</button>
+  </nav>
+
+  <!-- 실제 기록 -->
+  <div role="tabpanel" id="panel-live" aria-labelledby="tab-live">
+    <div class="dash" id="live"></div>
+  </div>
+
+  <!-- 장애 재생실 -->
+  <div role="tabpanel" id="panel-lab" aria-labelledby="tab-lab" hidden>
+    <div class="dash lab">
+      <section class="glass panel a-ctrl" style="--i:0">
+        <h3 class="ph"><i class="dot c-amber"></i>재생 조작</h3>
+        <p class="sub">공개 합성 fixture만 씁니다. 이 값과 날짜는 실제 기록이 아니며 실제 기록에 영향을 주지 않습니다. 실제 수집과 똑같은 저장·실패 함수를 호출합니다.</p>
+        <div class="group">
+          <div class="label">실패 다섯 가지 — 각각 초기화 → D1-A → D1-B → 실패 순서</div>
+          <div class="btns" id="fail-buttons"></div>
+        </div>
+        <div class="group">
+          <div class="label">흐름</div>
+          <div class="btns">
+            <button class="btn" data-seq="success">정상 흐름 (D1-A → D1-B → D2)</button>
+            <button class="btn" data-seq="recovery">복구 준비 (D1-A → D1-B → 지연)</button>
+            <button class="btn" data-act="reset">합성 상태 초기화</button>
+          </div>
+        </div>
+        <div class="group">
+          <div class="label">fixture 한 개씩</div>
+          <div class="btns" id="one-buttons"></div>
+        </div>
+      </section>
+      <div id="lab-view" class="contents"></div>
+    </div>
+    <div class="stack">
+
+      <div class="two">
+        <section class="glass panel">
+          <h3 class="ph"><i class="dot c-blue"></i>합성 일별 행</h3>
+          <div class="scroll" id="lab-rows"></div>
+        </section>
+        <section class="glass panel">
+          <h3 class="ph"><i class="dot c-violet"></i>재생 기록</h3>
+          <ol class="log" id="lab-log"></ol>
+        </section>
+      </div>
+      <section class="glass panel">
+        <h3 class="ph"><i class="dot c-green"></i>공개 꾸러미 대조</h3>
+        <div id="pkg"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- 하루 한 줄 -->
+  <div role="tabpanel" id="panel-day" aria-labelledby="tab-day" hidden>
+    <section class="glass panel">
+      <h3 class="ph"><i class="dot c-blue"></i>하루 한 줄 시험</h3>
+      <p class="sub">합성 시계로 같은 KST 날짜에 세 번, 다음 날짜에 한 번 성공시킵니다. 네 번째 시각은 UTC로는 아직 8월 24일이지만 KST로는 8월 25일이라, 날짜 키가 기준 시간대로 만들어지는지도 함께 확인됩니다.</p>
+      <div class="btns"><button class="btn primary" id="day-test">시험 실행</button></div>
+      <div class="scroll" id="day-out" style="margin-top:16px"></div>
+    </section>
+  </div>
+
+  <footer class="glass foot">
+    값은 Open-Meteo 예보 API의 current.temperature_2m입니다. 관측소 실측이 아니라 모델 기반 현재 기온이며, 비밀키 없이 호출합니다.
+    뒷배경 일러스트는 보는 사람의 현재 시각(KST)에 따라 낮(06–17시)·밤(18–05시)으로 바뀌는 장식이고, 구슬의 해·달 아이콘도 같은 기준을 따릅니다(값의 출처 시각은 구슬 아래에 따로 적혀 있습니다). 둘 다 실제 날씨(맑음·흐림·강수)나 실제 달의 모양을 뜻하지 않습니다.
+    안내 문구는 기온 구간과 현재 시간대만으로 고른 것입니다. 배경음악은 음원 파일 없이 브라우저에서 코드로 연주되며, 처음에는 꺼져 있습니다.
+    이 화면에는 개인정보를 담지 않습니다.
+  </footer>
+</div>
+
+<script src="core.js"></script>
+<script src="replay.js"></script>
+<script src="fixtures-embedded.js"></script>
+<script src="bgm.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
